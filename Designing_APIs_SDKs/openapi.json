@@ -1,0 +1,74 @@
+{
+    "openapi":"3.1.1",
+    "info": {
+      "title":"Financial metrics API",
+      "version":"1.0"
+    },
+    "servers": [
+      {"url":"https://api.example.com/v1"}
+    ],
+    "components": {
+        "schemas": {
+            "Month": {
+                "type": "string",
+                "title": "Month",
+                "description": "Calendar month in YYYY-MM format",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+                "examples": ["2025-09"]
+            },
+            "Metric": {
+                "type": "object",
+                "properties": {
+                    "Month": { "$ref": "#/components/schemas/Month" }
+                },
+                "required": ["Month"],
+                "additionalProperties": false
+            }
+        }
+    },
+    "paths": {
+        "/metrics": {
+            "get": {
+                "description": "Get metrics information",
+                "parameters": [
+                    {
+                        "name": "Month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "description": "Month of the metrics",
+                            "title": "Month"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of financial metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#components/schemas/Metric"
+                                    },
+                                    "title": "Response GET metrics"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+  }

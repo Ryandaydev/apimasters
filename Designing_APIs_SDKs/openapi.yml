@@ -4,9 +4,28 @@ info:
   version: '1.0'
 servers:
   - url: https://api.example.com/v1
+
+components:
+  parameters:
+    month:
+      name: month
+      in: query
+      required: true
+      description: 'Month of metric obsservation'
+      schema:
+
+    name:
+      name: name
+      in: query
+      required: true
+      description: ''
 paths:
-  /test:
+  /metrics:
     get:
+      description: 'Get metrics'
+      parameters: [
+        
+      ]
       responses:
         '200':
           description: OK
