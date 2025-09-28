@@ -23,8 +23,55 @@
                 },
                 "required": ["Month"],
                 "additionalProperties": false
+            },
+        "HTTPValidationError": {
+            "properties": {
+            "detail": {
+                "items": {
+                "$ref": "#/components/schemas/ValidationError"
+                },
+                "type": "array",
+                "title": "Detail"
             }
+            },
+            "type": "object",
+            "title": "HTTPValidationError"
+        },
+        "ValidationError": {
+            "properties": {
+            "loc": {
+                "items": {
+                "anyOf": [
+                    {
+                    "type": "string"
+                    },
+                    {
+                    "type": "integer"
+                    }
+                ]
+                },
+                "type": "array",
+                "title": "Location"
+            },
+            "msg": {
+                "type": "string",
+                "title": "Message"
+            },
+            "type": {
+                "type": "string",
+                "title": "Error Type"
+            }
+            },
+            "type": "object",
+            "required": [
+            "loc",
+            "msg",
+            "type"
+            ],
+            "title": "ValidationError"
         }
+    }
+
     },
     "paths": {
         "/metrics": {
@@ -35,11 +82,7 @@
                         "name": "Month",
                         "in": "query",
                         "required": false,
-                        "schema": {
-                            "type": "string",
-                            "description": "Month of the metrics",
-                            "title": "Month"
-                        }
+                        "schema": { "$ref": "#/components/schemas/Month" }
                     }
                 ],
                 "responses": {
@@ -50,7 +93,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#components/schemas/Metric"
+                                        "$ref": "#/components/schemas/Metric"
                                     },
                                     "title": "Response GET metrics"
                                 }
@@ -62,7 +105,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#components/schemas/HTTPValidationError"
+                                    "$ref": "#/components/schemas/HTTPValidationError"
                                 }
                             }
                         }
