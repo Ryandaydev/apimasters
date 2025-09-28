@@ -16,6 +16,28 @@
                 "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
                 "examples": ["2025-09"]
             },
+            "CountryCode": {
+                "type": "string",
+                "title": "Country Code",
+                "description": "ISO 3166-1 alpha-2 country code",
+                "pattern": "^[A-Z]{2}$",
+                "examples": ["US", "GB", "DE"]
+            },
+            "PostalCode": {
+                "type": "string",
+                "title": "Postal Code",
+                "description": "Postal/ZIP code",
+                "maxLength": 16,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9\\-\\s]{0,14}[A-Za-z0-9]$",
+                "examples": ["94105", "SW1A 1AA", "75008"]
+            },
+            "LastChangedSince": {
+                "type": "string",
+                "title": "Last Changed Since",
+                "description": "RFC 3339/ISO 8601 timestamp (UTC) to return records last changed on or after this instant.",
+                "format": "date-time",
+                "examples": ["2025-09-27T14:32:00Z"]
+            },            
             "Metric": {
                 "type": "object",
                 "properties": {
@@ -98,3 +120,4 @@
         }
     }
   }
+}
