@@ -2,6 +2,48 @@ openapi: 3.1.1
 info:
   title: Financial metrics API
   version: "1.0"
+
+paths:
+  /metrics:
+    get:
+      description: Get metrics information
+      parameters:
+        - name: Month
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Month"
+        - name: CountryCode
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/CountryCode"
+        - name: PostalCode
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/PostalCode"
+        - name: LastChangedSince
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/LastChangedDateTime"
+      responses:
+        "200":
+          description: List of financial metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Metric"
+                title: Response GET metrics
+        "422":
+          $ref: "#/components/responses/ProblemDetails"
+        "500":
+          $ref: "#/components/responses/ProblemDetails"
+
+
 components:
   schemas:
     Month:
@@ -135,42 +177,3 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
-paths:
-  /metrics:
-    get:
-      description: Get metrics information
-      parameters:
-        - name: Month
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/Month"
-        - name: CountryCode
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/CountryCode"
-        - name: PostalCode
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/PostalCode"
-        - name: LastChangedSince
-          in: query
-          required: false
-          schema:
-            $ref: "#/components/schemas/LastChangedDateTime"
-      responses:
-        "200":
-          description: List of financial metrics
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Metric"
-                title: Response GET metrics
-        "422":
-          $ref: "#/components/responses/ProblemDetails"
-        "500":
-          $ref: "#/components/responses/ProblemDetails"

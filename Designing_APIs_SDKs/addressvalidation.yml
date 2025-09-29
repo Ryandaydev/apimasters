@@ -1,0 +1,260 @@
+openapi: 3.1.1
+info:
+  title: Address Validation API
+  version: "1.0.0"
+
+paths:
+  /addresses/validate:
+    post:
+      summary: Validate and normalize a postal address
+      description: >
+        Validates a user-provided address and returns a normalized form plus a confidence score.
+        For partial inputs, the service attempts best-effort normalization and may include candidate matches.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+              examples:
+                ok:
+                  summary: Valid and normalized address
+                  value:
+                    isValid: true
+                    confidence: 0.98
+                    normalized:
+                      line1: "1600 Pennsylvania Avenue NW"
+                      line2: null
+                      locality: "Washington"
+                      administrativeArea: "DC"
+                      postalCode: "20500"
+                      countryCode: "US"
+                      latLon: "38.8977,-77.0365"
+                    candidates: []
+                needsReview:
+                  summary: Multiple candidates
+                  value:
+                    isValid: false
+                    confidence: 0.6
+                    normalized: null
+                    candidates:
+                      - score: 0.62
+                        address:
+                          line1: "10 Downing Street"
+                          locality: "London"
+                          administrativeArea: ""
+                          postalCode: "SW1A 2AA"
+                          countryCode: "GB"
+                          latLon: "51.5034,-0.1276"
+                      - score: 0.58
+                        address:
+                          line1: "10 Downing St"
+                          locality: "London"
+                          administrativeArea: ""
+                          postalCode: "SW1A 2AB"
+                          countryCode: "GB"
+                          latLon: "51.5033,-0.1277"
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+components:
+  schemas:
+    # --- Core input ---
+    AddressInput:
+      type: object
+      description: Postal address to validate. Provide as much information as available.
+      properties:
+        line1:
+          type: string
+          description: Primary street address (house number, street name).
+          maxLength: 200
+        line2:
+          type: string
+          description: Secondary unit (apt/suite/floor), if any.
+          maxLength: 200
+          nullable: true
+        locality:
+          type: string
+          description: City, town, or locality.
+          maxLength: 120
+        administrativeArea:
+          type: string
+          description: State, province, or region (use standard abbreviations when applicable).
+          maxLength: 120
+        postalCode:
+          type: string
+          description: Postal or ZIP code. Format varies by country; validated relative to countryCode when possible.
+          maxLength: 32
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+      required:
+        - line1
+        - countryCode
+
+    # --- Normalized output types ---
+    AddressNormalized:
+      type: object
+      description: Address normalized to provider’s canonical formatting rules.
+      properties:
+        line1:
+          type: string
+        line2:
+          type: string
+          nullable: true
+        locality:
+          type: string
+        administrativeArea:
+          type: string
+        postalCode:
+          type: string
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        latLon:
+          $ref: '#/components/schemas/LatLon'
+      required:
+        - line1
+        - locality
+        - countryCode
+
+    AddressCandidate:
+      type: object
+      description: A plausible candidate match for the submitted address.
+      properties:
+        score:
+          type: number
+          format: double
+          description: Confidence score between 0 and 1.
+          minimum: 0
+          maximum: 1
+        address:
+          $ref: '#/components/schemas/AddressNormalized'
+      required:
+        - score
+        - address
+
+    ValidationResult:
+      type: object
+      description: Result of validating and normalizing an address.
+      properties:
+        isValid:
+          type: boolean
+          description: Whether the input address is considered valid.
+        confidence:
+          type: number
+          format: double
+          description: Overall confidence between 0 and 1.
+          minimum: 0
+          maximum: 1
+        normalized:
+          oneOf:
+            - $ref: '#/components/schemas/AddressNormalized'
+            - type: "null"
+          description: The single best normalized address, if confidently resolved.
+          nullable: true
+        candidates:
+          type: array
+          description: Alternative candidates when not confidently resolvable to a single address.
+          items:
+            $ref: '#/components/schemas/AddressCandidate'
+          default: []
+      required:
+        - isValid
+        - confidence
+        - candidates
+
+    # --- Reusable primitives (global-friendly) ---
+    CountryCode:
+      type: string
+      title: Country Code
+      description: ISO 3166-1 alpha-2 country code (e.g., US, GB, DE).
+      pattern: '^[A-Z]{2}$'
+      examples: [US, GB, DE]
+
+    LatLon:
+      type: string
+      title: LatLon
+      description: Geographic point expressed as 'latitude,longitude' in decimal degrees.
+      pattern: '^-?([1-8]?\d(\.\d+)?|90(\.0+)?),-?(180(\.0+)?|(1[0-7]\d)|(\d?\d))(\.\d+)?$'
+      examples: ['39.0997,-94.5786']
+
+    ProblemDetails:
+      type: object
+      description: RFC 7807/9457 Problem Details.
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: URI identifying the problem type.
+        title:
+          type: string
+          description: Short, human-readable summary of the problem type.
+        status:
+          type: integer
+          description: HTTP status code for this occurrence.
+        detail:
+          type: string
+          description: Explanation specific to this occurrence.
+        instance:
+          type: string
+          format: uri-reference
+          description: URI identifying this occurrence.
+      required: [title, status]
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://api.example.com/errors/invalid-parameter
+            title: Invalid parameter
+            status: 400
+            detail: "Missing required field 'line1'."
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://api.example.com/errors/unauthorized
+            title: Unauthorized
+            status: 401
+            detail: "API key is missing or invalid."
+    ValidationError:
+      description: Unprocessable entity
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://api.example.com/errors/validation
+            title: Validation Error
+            status: 422
+            detail: "postalCode format is invalid for countryCode=GB."
+    ServerError:
+      description: Internal server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: https://api.example.com/errors/server-error
+            title: Internal Server Error
+            status: 500
+            detail: "Unexpected error."

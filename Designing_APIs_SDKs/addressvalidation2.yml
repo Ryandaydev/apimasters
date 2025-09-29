@@ -1,0 +1,223 @@
+openapi: 3.1.1
+info:
+  title: Address Validation API
+  version: "1.0"
+
+paths:
+  /validate:
+    post:
+      description: Validate a single address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddressRequest"
+      responses:
+        "200":
+          description: Address validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressResponse"
+        "400":
+          $ref: "#/components/responses/ProblemDetails"
+        "422":
+          $ref: "#/components/responses/ProblemDetails"
+        "500":
+          $ref: "#/components/responses/ProblemDetails"
+  /validate/batch:
+    post:
+      description: Validate multiple addresses in batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/AddressRequest"
+              maxItems: 100
+              title: Batch Address Validation Request
+      responses:
+        "200":
+          description: Batch address validation results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AddressResponse"
+                title: Batch Address Validation Response
+        "400":
+          $ref: "#/components/responses/ProblemDetails"
+        "422":
+          $ref: "#/components/responses/ProblemDetails"
+        "500":
+          $ref: "#/components/responses/ProblemDetails"
+
+
+components:
+  schemas:
+    CountryCode:
+      type: string
+      title: Country Code
+      description: ISO 3166-1 alpha-2 country code
+      pattern: ^[A-Z]{2}$
+      examples:
+        - US
+        - GB
+        - DE
+    PostalCode:
+      type: string
+      title: Postal Code
+      description: Postal/ZIP code
+      maxLength: 16
+      pattern: ^[A-Za-z0-9][A-Za-z0-9\-\s]{0,14}[A-Za-z0-9]$
+      examples:
+        - "94105"
+        - "SW1A 1AA"
+        - "75008"
+    StreetAddress:
+      type: string
+      title: Street Address
+      description: Street address including number and name
+      maxLength: 100
+      examples:
+        - "123 Main Street"
+        - "45 Oak Avenue Apt 2B"
+        - "10 Downing Street"
+    City:
+      type: string
+      title: City
+      description: City or locality name
+      maxLength: 50
+      examples:
+        - "San Francisco"
+        - "London"
+        - "Paris"
+    StateProvince:
+      type: string
+      title: State or Province
+      description: State, province, or administrative region code
+      maxLength: 10
+      pattern: ^[A-Za-z0-9\-\s]+$
+      examples:
+        - "CA"
+        - "TX"
+        - "ON"
+        - "NSW"
+    LatLon:
+      type: string
+      title: LatLon
+      description: Geographic point expressed as 'latitude,longitude' in decimal degrees.
+      pattern: ^-?([1-8]?\d(\.\d+)?|90(\.0+)?),-?(180(\.0+)?|(1[0-7]\d)|(\d?\d))(\.\d+)?$
+      examples:
+        - "39.0997,-94.5786"
+    ValidationStatus:
+      type: string
+      title: Validation Status
+      description: Overall validation status of the address
+      enum:
+        - VALID
+        - INVALID
+        - PARTIAL
+        - UNVERIFIED
+      examples:
+        - VALID
+    ConfidenceScore:
+      type: number
+      title: Confidence Score
+      description: Confidence level of address validation (0.0 to 1.0)
+      format: double
+      minimum: 0.0
+      maximum: 1.0
+      examples:
+        - 0.95
+    AddressRequest:
+      type: object
+      title: Address Validation Request
+      description: Address information to be validated
+      properties:
+        StreetAddress:
+          $ref: "#/components/schemas/StreetAddress"
+        City:
+          $ref: "#/components/schemas/City"
+        StateProvince:
+          $ref: "#/components/schemas/StateProvince"
+        PostalCode:
+          $ref: "#/components/schemas/PostalCode"
+        CountryCode:
+          $ref: "#/components/schemas/CountryCode"
+      required:
+        - StreetAddress
+        - CountryCode
+      additionalProperties: false
+    AddressResponse:
+      type: object
+      title: Address Validation Response
+      description: Validated address information with validation results
+      properties:
+        OriginalAddress:
+          $ref: "#/components/schemas/AddressRequest"
+        ValidatedAddress:
+          type: object
+          properties:
+            StreetAddress:
+              $ref: "#/components/schemas/StreetAddress"
+            City:
+              $ref: "#/components/schemas/City"
+            StateProvince:
+              $ref: "#/components/schemas/StateProvince"
+            PostalCode:
+              $ref: "#/components/schemas/PostalCode"
+            CountryCode:
+              $ref: "#/components/schemas/CountryCode"
+            LatLon:
+              $ref: "#/components/schemas/LatLon"
+        ValidationStatus:
+          $ref: "#/components/schemas/ValidationStatus"
+        ConfidenceScore:
+          $ref: "#/components/schemas/ConfidenceScore"
+        ValidationMessages:
+          type: array
+          items:
+            type: string
+          description: List of validation messages or corrections made
+          examples:
+            - ["Street name corrected", "ZIP+4 code added"]
+      required:
+        - OriginalAddress
+        - ValidationStatus
+        - ConfidenceScore
+      additionalProperties: false
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: URI reference identifying the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          description: HTTP status code for this error occurrence.
+        detail:
+          type: string
+          description: Explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          format: uri-reference
+          description: URI reference identifying the specific occurrence of the problem.
+      required:
+        - title
+        - status
+  responses:
+    ProblemDetails:
+      description: Problem Details using RFC 9457
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"          
