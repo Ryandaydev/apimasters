@@ -1,12 +1,12 @@
-openapi: '3.1.1'
+openapi: 3.1.1
 info:
   title: Financial metrics API
-  version: '1.0'
+  version: "1.0"
 
 paths:
-  /metrics:
+  /economicsnapshots:
     get:
-      description: Get metrics information
+      description: Get economic snapshots containing financial metrics.
       parameters:
         - name: Month
           in: query
@@ -27,22 +27,21 @@ paths:
           in: query
           required: false
           schema:
-            $ref: "#/components/schemas/LastChangedDateTime"            
-
+            $ref: "#/components/schemas/LastChangedDateTime"
       responses:
-        '200':
+        "200":
           description: List of financial metrics
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Metric"
+                  $ref: "#/components/schemas/EconomicSnapshot"
                 title: Response GET metrics
         "422":
           $ref: "#/components/responses/ProblemDetails"
         "500":
-          $ref: "#/components/responses/ProblemDetails"    
+          $ref: "#/components/responses/ProblemDetails"
 
 
 components:
@@ -80,10 +79,17 @@ components:
       format: date-time
       examples:
         - "2025-09-27T14:32:00Z"
-    Metric:
+    LatLon:
+      type: string
+      title: LatLon
+      description: Geographic point expressed as 'latitude,longitude' in decimal degrees.
+      pattern: ^-?([1-8]?\d(\.\d+)?|90(\.0+)?),-?(180(\.0+)?|(1[0-7]\d)|(\d?\d))(\.\d+)?$
+      examples:
+        - "39.0997,-94.5786"
+    EconomicSnapshot:
       type: object
       title: Metric
-      description: Financial and demographic metrics for a given region and time period.
+      description: Snapshot of financial and demographic metrics for a given region and time period.
       properties:
         Month:
           $ref: "#/components/schemas/Month"
@@ -91,6 +97,56 @@ components:
           $ref: "#/components/schemas/CountryCode"
         PostalCode:
           $ref: "#/components/schemas/PostalCode"
+        LatLon:
+          $ref: "#/components/schemas/LatLon"
+        LastChangedDateTime:
+          $ref: "#/components/schemas/LastChangedDateTime"
+        Currency:
+          type: string
+          description: ISO 4217 currency code in which monetary values are expressed.
+          pattern: ^[A-Z]{3}$
+          examples:
+            - USD
+            - EUR
+            - GBP
+        Households:
+          type: integer
+          description: Total number of households in the region.
+          minimum: 0
+          examples:
+            - 12000
+        MedianHouseholdIncome:
+          type: number
+          format: double
+          description: Median household income in local currency.
+          examples:
+            - 55000.75
+        MedianMonthlyRent:
+          type: number
+          format: double
+          description: Median monthly rent in local currency.
+          examples:
+            - 1200.5
+        VehiclesPerHousehold:
+          type: number
+          format: double
+          description: Average number of vehicles per household.
+          minimum: 0
+          examples:
+            - 1.8
+        AverageRetailSpendPerHousehold:
+          type: number
+          format: double
+          description: Average monthly retail spending per household in local currency.
+          examples:
+            - 2300.45
+      required:
+        - Month
+        - CountryCode
+        - PostalCode
+        - Currency
+        - Households
+      additionalProperties: false
     ProblemDetails:
       type: object
       properties:
@@ -113,7 +169,7 @@ components:
           description: URI reference identifying the specific occurrence of the problem.
       required:
         - title
-        - status    
+        - status
   responses:
     ProblemDetails:
       description: Problem Details using RFC 9457
@@ -121,6 +177,3 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/ProblemDetails"
-
-
-
