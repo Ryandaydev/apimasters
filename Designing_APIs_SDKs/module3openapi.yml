@@ -1,0 +1,50 @@
+openapi: 3.1.1
+info:
+  title: Financial metrics API
+  version: "1.0"
+
+paths:
+  /economicsnapshots:
+    get:
+      description: Get economic snapshots containing financial metrics.
+      tags:
+        - metrics
+      parameters:
+        - name: Month
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Month"      
+      responses:
+        "200":
+          description: List of financial metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EconomicSnapshot"
+                title: Response GET metrics
+
+components:
+  schemas:
+    Month:
+      type: string
+      title: Month
+      description: Calendar month in YYYY-MM format
+      pattern: ^\d{4}-(0[1-9]|1[0-2])$
+      examples:
+        - "2025-09"
+    EconomicSnapshot:
+      type: object
+      title: EconomicSnapshot
+      description: Snapshot of financial and demographic metrics for a given region and time period.
+      properties:
+        Month:
+          $ref: "#/components/schemas/Month"
+      required:
+        - Month
+
+tags:
+  - name: metrics
+    description: Endpoints related to financial and demographic metrics
