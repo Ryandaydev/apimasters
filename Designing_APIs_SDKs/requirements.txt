@@ -1,2 +1,3 @@
 swcpy
 pandas
+polars
