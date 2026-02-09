@@ -12,6 +12,18 @@ These repositories are designed to accompany Ryan Day’s courses and provide ha
 
 ---
 
+## ⭐ Featured Course
+
+### Designing APIs and SDKs for Data Scientists
+
+The first course published in this repository focuses on building APIs and SDKs that are intuitive, notebook-friendly, and optimized for real data science workflows.
+
+👉 Course README: `designing-apis-and-sdks-for-data-scientists/README.md`
+
+👉 Course page: [https://www.home.apimasters.io/learn/learning-plans/22/designing-apis-and-sdks-for-data-scientists-by-ryan-day](https://www.home.apimasters.io/learn/learning-plans/22/designing-apis-and-sdks-for-data-scientists-by-ryan-day)
+
+---
+
 ## 🎓 Courses
 
 For the full catalog of courses created by Ryan Day on API Masters, visit:
