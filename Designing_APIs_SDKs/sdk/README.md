@@ -35,6 +35,22 @@ leagues_response = client.list_leagues()
 print(leagues_response)
 ```
 
+### Data Validation and Pydantic Models
+All data returned by this SDK is parsed into **Pydantic model objects** (for example, `League`, `Player`, `Team`, and `Performance`).  
+This means:
+
+- Returned objects are **type-safe and structured** — you can access fields directly as attributes (e.g., `player.first_name` instead of `player["first_name"]`).  
+- The SDK automatically **validates** all response data against the expected schema.  
+- If the API returns malformed or incompatible data, a `pydantic.ValidationError` will be raised, ensuring that only valid and well-formed data is passed to your code.
+
+#### Example: Using returned Pydantic objects
+```python
+players = client.list_players()
+
+for p in players:
+    print(f"{p.first_name} {p.last_name} - Position: {p.position}")
+```
+
 ### Example of bulk data functions
 
 The build data endpoint return a bytes object. Here is an example of saving a file locally from a bulk file endpoint:
@@ -56,4 +72,25 @@ config = SWCConfig()
     with open(output_file_path, 'wb') as f:
         f.write(player_file)
 ```
+
+# Configuring Retry Behavior
+
+The SDK supports automatic retry with **progressive backoff with jitter**, which retries failed API calls (such as temporary network errors or rate limits) for a limited period before giving up.  
+This behavior is configured through the `SWCConfig` object.
+
+```python
+from swcpy import SWCConfig, SWCClient
+
+# Example: enable backoff with a maximum retry time of 30 seconds
+config = SWCConfig(
+    backoff=True,
+    backoff_max_time=30
+)
+
+client = SWCClient(config)
+```
+By default, retries are **enabled** with exponential backoff up to **30 seconds**.  
+You can disable them by passing `backoff=False` if you prefer to handle retry logic manually.
+
+
 
